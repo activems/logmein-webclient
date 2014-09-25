@@ -1,0 +1,27 @@
+{
+  "name": "logmein-client-auth",
+  "version": "0.1.0",
+  "homepage": "https://github.com/activems/logmein-client-auth",
+  "authors": [
+    "ArturoBlas <arturoblas@gmail.com>"
+  ],
+  "description": "LogmeIn OAuth2.0 client authorization library",
+  "main": "LogmeInClientAuth.coffee",
+  "keywords": [
+    "OAuth",
+    "OAuth2.0",
+    "authentication"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "require-cs": "~0.5.0",
+    "http": "~3.24.10"
+  }
+}
