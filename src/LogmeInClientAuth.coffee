@@ -77,19 +77,19 @@ class LogmeInClientAuth
     # is specified during the library initialization. By default,
     # the host points to the Gipsy-Danger API web server.
     #
-    @DEFAULT_HOST : 'https://api.actisec.com'
+    DEFAULT_HOST : 'api.actisec.com'
 
     # `DEFAULT_PORT` specifies the default TCP port in the 
     # authentication server used by the client if no `port` configuration
     # is specified during the library initialization.
     #
-    @DEFAULT_PORT : 80
+    DEFAULT_PORT : 80
 
     # `DEFAULT_API` specifies the default API version used 
     # to interface with the server if no `apiVersion` configuration
     # is specified during the library initialization.
     #
-    @DEFAULT_API  : "v1"
+    DEFAULT_API  : "v1"
 
     # Initializing the client library
     # ----------------------------------------------------
@@ -100,7 +100,7 @@ class LogmeInClientAuth
     #
     # |Name|Value|Description|
     # |----|-----|-----------|
-    # |`host`|`String`|Authentication server to which the client will connect. Should not include the URL schema. Defaults to `DEFAULT_HOST`.|
+    # |`host`|`String`|Authentication server to which the client will connect. Should *NOT* include the URL schema as it should always be `https`. Defaults to `DEFAULT_HOST`.|
     # |`port`|TCP port number|TCP port from the host to which the client will connect. Defaults to `DEFAULT_PORT`|
     # |`apiVersion`|`String`|Identifies the version of the API used. Defaults to `DEFAULT_API`|
     # 
@@ -120,7 +120,11 @@ class LogmeInClientAuth
     # A new client instance is returned that can be used to
     # perform the authentication and acess protected resources.
     #
-    constructor: (@config) ->
+    constructor: (config) ->
+        { @host, @port, @apiVersion } = config if config?
+        @host       ?= @DEFAULT_HOST
+        @port       ?= @DEFAULT_PORT
+        @apiVersion ?= @DEFAULT_API
         
 
     # Accessing the settings
@@ -134,7 +138,7 @@ class LogmeInClientAuth
     # ```
     #
     getHost: () ->
-      return if @config? and @config.host? then @config.host else @DEFAULT_HOST
+      return @host
 
     # By calling `getPort()` the caller can retrieve the 
     # configured `host` used by the library
@@ -144,7 +148,7 @@ class LogmeInClientAuth
     # ```
     #
     getPort: () ->
-      return if @config? and @config.port? then @config.port else @DEFAULT_PORT
+      return @port
 
 
     # By calling `getApiVersion()` the caller can retrieve the 
@@ -155,10 +159,14 @@ class LogmeInClientAuth
     # ```
     #
     getApiVersion: () ->
-      return if @config? and @config.apiVersion? then @config.apiVersion else @DEFAULT_API
+      return @apiVersion
 
     _getResourcePath: (resource) ->
       return '/' + @getApiVersion() + '/oauth2/' + resource 
+
+    _redirect: (destination) ->
+        window.location = destination
+
 
     # Performing the client authentication
     # ----------------------------------------------------
@@ -309,7 +317,7 @@ class LogmeInClientAuth
       redirectLocation = "https://" + @getHost() + ":" + @getPort() + 
         @_getResourcePath('auth') + queryString
      
-      window.location = redirectLocation
+      @_redirect redirectLocation
 
     # Accessing resource owner's data
     # -------------------------------------------
@@ -422,4 +430,4 @@ class LogmeInClientAuth
 exports.LogmeInClientAuth = LogmeInClientAuth
 
 module.exports = (config) -> 
-     return new LogmeInClientAuth(config)
+     return new LogmeInClientAuth(config) 

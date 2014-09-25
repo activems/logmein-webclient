@@ -55,7 +55,7 @@ To initialize the library you just need to call the constructor, method, which t
 
 |Name|Value|Description|
 |----|-----|-----------|
-|`host`|`String`|Authentication server to which the client will connect. Should not include the URL schema. Defaults to `DEFAULT_HOST`.|
+|`host`|`String`|Authentication server to which the client will connect. Should *NOT* include the URL schema as it should always be `https`. Defaults to `DEFAULT_HOST`.|
 |`port`|TCP port number|TCP port from the host to which the client will connect. Defaults to `DEFAULT_PORT`|
 |`apiVersion`|`String`|Identifies the version of the API used. Defaults to `DEFAULT_API`|
 
