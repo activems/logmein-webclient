@@ -14,7 +14,7 @@ module.exports = (grunt) ->
 
     watch:
         files: '**/*.coffee'
-        tasks: ['default']
+        tasks: ['test']
 
     jasmine:
       src: '<%= meta.src %>'
@@ -29,10 +29,22 @@ module.exports = (grunt) ->
       compile:
         files:
           'build/tests.js': ['test/*.coffee']
+
+    docco: 
+      debug:
+        src: ['src/**/*.coffee']
+        options: 
+          output: 'docs/'
+          layout: 'linear'
+
    
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.loadNpmTasks 'grunt-contrib-jasmine'
+  grunt.loadNpmTasks 'grunt-docco'
 
-  grunt.registerTask 'default', ['browserify', 'coffee', 'jasmine']
+ 
+  grunt.registerTask 'default', ['browserify', 'coffee', 'jasmine', 'docco']
+  grunt.registerTask 'test', ['browserify', 'coffee', 'jasmine']
+  grunt.registerTask 'doc', ['docco']

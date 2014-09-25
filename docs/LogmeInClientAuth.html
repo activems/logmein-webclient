@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Using LogmeIn OAuth2.0 client authorization library</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          
+          <h1 id="using-logmein-oauth2-0-client-authorization-library">Using LogmeIn OAuth2.0 client authorization library</h1>
+
+          
+        
+
+        
+      </div>
+
+      
+        
+        <p>The LogmeIn OAuth 2.0 endpoint supports JavaScript-centric
+applications. </p>
+<p>These applications may access the resource owner’s data while 
+the user is present by obtaining explicit authorization from it.</p>
+<p>One important characteristic of these applications is that they
+cannot keep a secret, which means that the client secret cannot
+be used to stablish the authentication.</p>
+<p>This library provides acess to the authentication server so that
+clients like these can make use of the authentication system. It 
+does so by implementing the OAuth 2.0 <em><a href="http://tools.ietf.org/html/rfc6749#section-4.2">implicit grant</a></em>
+authentication model.</p>
+<blockquote>
+<p><em>Note:</em> The implicit grant model involves that the client should provide a callback endpoint on their web infrastructure as explained below.</p>
+</blockquote>
+<p>Here’s an illustration of how the whole authorization process
+works using the implicit grant model:</p>
+<pre><code class="lang-html">+----------+
+| Resource |
+|  Owner   |
+|          | 
++----------+
+     ^
+     |
+    (B)
++----|-----+          Client Identifier     +---------------+
+|         -+----(A)-- &amp; Redirection URI ---&gt;|               |
+|  User-   |                                | Authorization |
+|  Agent  -|----(B)-- User authenticates --&gt;|     Server    |
+|          |                                |               |
+|          |&lt;---(C)--- Redirection URI ----&lt;|               |
+|          |          with Access Token     +---------------+
+|          |            in Fragment
+|          |                                +---------------+
+|          |----(D)--- Redirection URI ----&gt;|   Web-Hosted  |
+|          |          without Fragment      |     Client    |
+|          |                                |    Resource   |
+|     (F)  |&lt;---(E)------- Script ---------&lt;|               |
+|          |                                +---------------+
++-|--------+
+  |    |
+ (A)  (G) Access Token
+  |    |
+  ^    v
++---------+
+|         |
+|  Client |
+|         |
++---------+
+</code></pre>
+
+        
+          <div class='highlight'><pre>http = <span class="hljs-built_in">require</span>(<span class="hljs-string">'http'</span>)</pre></div>
+        
+      
+        
+        <h2 id="the-client-class-">The Client class  </h2>
+
+        
+      
+        
+        <p>The Client class is the entry point to the authentication
+library.
+It provides with all the necessary functionality to perform 
+the authentication, token validation and access to the resource
+owner’s data.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LogmeInClientAuth</span></span></pre></div>
+        
+      
+        
+        <h2 id="client-settings-">Client settings  </h2>
+
+        
+      
+        
+        
+        
+      
+        
+        <p><code>DEFAULT_HOST</code> specifies the default host used by the 
+client as authentication server if no <code>host</code> configuration
+is specified during the library initialization. By default,
+the host points to the Gipsy-Danger API web server.</p>
+
+        
+          <div class='highlight'><pre>    DEFAULT_HOST : <span class="hljs-string">'api.actisec.com'</span></pre></div>
+        
+      
+        
+        <p><code>DEFAULT_PORT</code> specifies the default TCP port in the 
+authentication server used by the client if no <code>port</code> configuration
+is specified during the library initialization.</p>
+
+        
+          <div class='highlight'><pre>    DEFAULT_PORT : <span class="hljs-number">443</span></pre></div>
+        
+      
+        
+        <p><code>DEFAULT_API</code> specifies the default API version used 
+to interface with the server if no <code>apiVersion</code> configuration
+is specified during the library initialization.</p>
+
+        
+          <div class='highlight'><pre>    DEFAULT_API  : <span class="hljs-string">"v1"</span></pre></div>
+        
+      
+        
+        <h2 id="initializing-the-client-library">Initializing the client library</h2>
+
+        
+      
+        
+        <p>To initialize the library you need to call the constructor,
+method, which takes as input a configuration object that
+can contain zero or more of the following fields:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>host</code></td>
+<td><code>String</code></td>
+<td>Authentication server to which the client will connect. Should <em>NOT</em> include the URL schema as it should always be <code>https</code>. Defaults to <code>DEFAULT_HOST</code>.</td>
+</tr>
+<tr>
+<td><code>port</code></td>
+<td>TCP port number</td>
+<td>TCP port from the host to which the client will connect. Defaults to <code>DEFAULT_PORT</code></td>
+</tr>
+<tr>
+<td><code>apiVersion</code></td>
+<td><code>String</code></td>
+<td>Identifies the version of the API used. Defaults to <code>DEFAULT_API</code></td>
+</tr>
+</tbody>
+</table>
+<p>Example of initialization from a JavaScript client:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> client = LogmeInClientAuth();
+</code></pre>
+<p>For clients with nosting their own authorization infrastructure, a custom
+settings may be also provided:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> client = LogmeInClientAuth({ host: <span class="hljs-string">"example.com"</span>, port: <span class="hljs-number">8000</span>});
+</code></pre>
+<p>A new client instance is returned that can be used to
+perform the authentication and acess protected resources.</p>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(config)</span> -&gt;</span>
+        { <span class="hljs-property">@host</span>, <span class="hljs-property">@port</span>, <span class="hljs-property">@apiVersion</span> } = config <span class="hljs-keyword">if</span> config?
+        <span class="hljs-property">@host</span>       ?= <span class="hljs-property">@DEFAULT_HOST</span>
+        <span class="hljs-property">@port</span>       ?= <span class="hljs-property">@DEFAULT_PORT</span>
+        <span class="hljs-property">@apiVersion</span> ?= <span class="hljs-property">@DEFAULT_API</span></pre></div>
+        
+      
+        
+        <h2 id="accessing-the-settings">Accessing the settings</h2>
+
+        
+      
+        
+        
+        
+      
+        
+        <p>By calling <code>getHost()</code> the caller can retrieve the 
+configured <code>host</code> used by the library</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> host = client.getHost();
+</code></pre>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-attribute">getHost</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+      <span class="hljs-keyword">return</span> <span class="hljs-property">@host</span></pre></div>
+        
+      
+        
+        <p>By calling <code>getPort()</code> the caller can retrieve the 
+configured <code>host</code> used by the library</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> port = client.getPort();
+</code></pre>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-attribute">getPort</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+      <span class="hljs-keyword">return</span> <span class="hljs-property">@port</span></pre></div>
+        
+      
+        
+        <p>By calling <code>getApiVersion()</code> the caller can retrieve the 
+configured <code>apiVersion</code> used by the library</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> api = client.getApiVersion();
+</code></pre>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-attribute">getApiVersion</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+      <span class="hljs-keyword">return</span> <span class="hljs-property">@apiVersion</span>
+
+    <span class="hljs-attribute">_getResourcePath</span>: <span class="hljs-function"><span class="hljs-params">(resource)</span> -&gt;</span>
+      <span class="hljs-keyword">return</span> <span class="hljs-string">'/'</span> + <span class="hljs-property">@getApiVersion</span>() + <span class="hljs-string">'/oauth2/'</span> + resource 
+
+    <span class="hljs-attribute">_redirect</span>: <span class="hljs-function"><span class="hljs-params">(destination)</span> -&gt;</span>
+        <span class="hljs-built_in">window</span>.location = destination</pre></div>
+        
+      
+        
+        <h2 id="performing-the-client-authentication">Performing the client authentication</h2>
+
+        
+      
+        
+        <p>In order for a client to be able to access the resouces
+that belong to a resource owner, the client should get
+authenticated, which will request the resource owner 
+confirmation.</p>
+<p>If the resource owner grants acess to the client then
+the client can access to the resources in the granted 
+scope.</p>
+<blockquote>
+<p><em>Note:</em> The invocation of this method will automatically
+redirect the browser to an endpoint in the authentication 
+host.</p>
+</blockquote>
+<p>The <code>authenticate()</code> function takes as input the client’s
+configuration, which involves the following fields. </p>
+<p>Authenticate the client against the authentication
+server using the provided client configuration. The
+client configuration should include the following
+parameters:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>client_id</code></td>
+<td><code>String</code></td>
+<td>Client ID obtained upon client registration</td>
+</tr>
+<tr>
+<td><code>redirect_uri</code></td>
+<td>URI</td>
+<td>Fully qualified URI containing the callback in a server hosted by the client</td>
+</tr>
+<tr>
+<td><code>scope</code></td>
+<td><code>String</code></td>
+<td>Space-separated list of the realms to which the client is requesting access</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td></td>
+<td>This can be used by the client in order to send optional information to the callback such as a URL to which the browser should be pointing after the authentication has been successful</td>
+</tr>
+</tbody>
+</table>
+<p>This webservice should provide a means to extract the <code>access_token</code>
+Example of client authentication from JavaScript:</p>
+<pre><code class="lang-javascript">client.authenticate({
+  client_id:    <span class="hljs-string">"8df683e0-43a7-11e4-916c-0800200c9a1f"</span>,
+  redirect_uri: <span class="hljs-string">"https://client.example.com/oauth2_callback"</span>,
+  scope:        <span class="hljs-string">"profile vault"</span>,
+  state:        <span class="hljs-string">"login.html"</span>
+})
+</code></pre>
+<p>Whether the resource owner grants access to the client to its data or not, 
+the authorization server will generate a redirection (HTTP code <code>302</code>)response to the 
+provided <code>redirect_uri</code>, including the following data in the URI fragment:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>access_token</code></td>
+<td><code>String</code></td>
+<td>Identifier of the access token that grants access to the client to the resource owner’s data for the current session</td>
+</tr>
+<tr>
+<td><code>token_type</code></td>
+<td><code>Bearer</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>expires_in</code></td>
+<td><code>Integer</code></td>
+<td>Number of seconds until the provided <code>access_token</code> expires</td>
+</tr>
+<tr>
+<td><code>scope</code></td>
+<td><code>String</code></td>
+<td>Space-separeated list of the realm to which the resource owner has granted access to the client. Should not necessary be the same as the requested so this should be checked</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td><code>String</code></td>
+<td>The same value as the provided in the <code>authenticate()</code> method call</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td><code>access_denied</code></td>
+<td>This will be included just when the access is not granted and the value is explicitly the same always</td>
+</tr>
+</tbody>
+</table>
+<p>Here’s an example of a response generated when the access is granted:</p>
+<pre><code>HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">302</span> Found
+<span class="hljs-attribute">Location</span>: <span class="hljs-attribute">https</span>:<span class="hljs-regexp">//</span>client.example.com/oauth2_callback<span class="hljs-comment">#access_token=2YotnFZFEjr1zCsicMWpAA&amp;token_type=Bearer&amp;expires_in=60&amp;scope=profile%20vault&amp;state=login.html</span>
+</code></pre><p>Otherwise, the response will include an error such as:</p>
+<pre><code>HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">302</span> Found
+<span class="hljs-attribute">Location</span>: <span class="hljs-attribute">https</span>:<span class="hljs-regexp">//</span>client.example.com/oauth2_callback<span class="hljs-comment">#error=access_denied&amp;state=login.html</span>
+</code></pre><p>The callback endpoint should be able to parse the fragment in the client-side 
+and extract the parameters in order to post them to an endpoint at the client’s web server
+so that this can keep the <code>access_token</code> in the session or handle the error.</p>
+<p>In order to be able to do so, this JavaScript code is provided as an example 
+and can be used as the payload served by the <code>redirect_uri</code> callback.</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"text/javascript"</span>&gt;</span><span class="javascript">
+<span class="hljs-comment">// First, parse the query string</span>
+<span class="hljs-keyword">var</span> params = {}, queryString = location.hash.substring(<span class="hljs-number">1</span>), regex = <span class="hljs-regexp">/([^&amp;=]+)=([^&amp;]*)/g</span>, m;
+<span class="hljs-keyword">while</span> (m = regex.exec(queryString)) {
+  params[<span class="hljs-built_in">decodeURIComponent</span>(m[<span class="hljs-number">1</span>])] = <span class="hljs-built_in">decodeURIComponent</span>(m[<span class="hljs-number">2</span>]);
+}
+
+<span class="hljs-comment">// And send the token over to the server</span>
+<span class="hljs-keyword">var</span> req = <span class="hljs-keyword">new</span> XMLHttpRequest();
+
+req.open(<span class="hljs-string">'POST'</span>, <span class="hljs-string">'http://'</span> + <span class="hljs-built_in">window</span>.location.host + <span class="hljs-string">'/catchtoken?'</span> + queryString, <span class="hljs-literal">true</span>);
+req.onreadystatechange = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(e)</span> </span>{
+  <span class="hljs-keyword">if</span> (req.readyState == <span class="hljs-number">4</span>) {
+    <span class="hljs-keyword">if</span>(req.status == <span class="hljs-number">200</span>){
+      <span class="hljs-built_in">window</span>.location = params[<span class="hljs-string">"state"</span>]
+    } 
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(req.status == <span class="hljs-number">400</span>) {
+      alert(<span class="hljs-string">'There was an error processing the token.'</span>)
+    }
+    <span class="hljs-keyword">else</span> {
+      alert(<span class="hljs-string">'something else other than 200 was returned'</span>)
+    }
+  }
+};
+req.send(<span class="hljs-literal">null</span>);
+</span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span>
+</code></pre>
+<p>This script parses the fragment from the URI and generates 
+a query string which is passed to the <code>catchtoken</code> endpoint 
+in the same host as the <code>redirect_uri</code>.</p>
+<blockquote>
+<p><em>Note:</em> This script is just an implementation example so you can choose to implement it differently.</p>
+</blockquote>
+<p>In this case, once the <code>catchtoken</code> endpoint receives the 
+parameters in the query string it has access to the <code>access_token</code>,
+which should be validated against the authentication server, and the 
+rest of parameters.</p>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-attribute">authenticate</span>: <span class="hljs-function"><span class="hljs-params">(client)</span> -&gt;</span>
+<span class="hljs-function">      
+      <span class="hljs-title">toQueryString</span> = <span class="hljs-params">(data)</span> =&gt;</span>
+<span class="hljs-function">     
+        <span class="hljs-title">map</span> = <span class="hljs-params">(hash, prefix=<span class="hljs-string">''</span>)</span> =&gt;</span>
+          result = []
+       
+          <span class="hljs-keyword">for</span> key, value <span class="hljs-keyword">of</span> hash
+            key = <span class="hljs-keyword">if</span> prefix <span class="hljs-keyword">is</span> <span class="hljs-string">''</span> <span class="hljs-keyword">then</span> key <span class="hljs-keyword">else</span> <span class="hljs-string">"<span class="hljs-subst">#{prefix}</span>[<span class="hljs-subst">#{key}</span>]"</span>
+       
+            <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span>(value) <span class="hljs-keyword">is</span> <span class="hljs-string">'object'</span>
+              <span class="hljs-keyword">if</span> value <span class="hljs-keyword">instanceof</span> Array
+                <span class="hljs-keyword">for</span> v <span class="hljs-keyword">in</span> value
+                  result.push([<span class="hljs-string">"<span class="hljs-subst">#{key}</span>[]"</span>, v])
+              <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> value <span class="hljs-comment"># assuming it's an object</span>
+                <span class="hljs-keyword">for</span> entry <span class="hljs-keyword">in</span> map(value, key)
+                  result.push(entry)
+       
+            <span class="hljs-keyword">else</span>
+              result.push([key, <span class="hljs-string">"<span class="hljs-subst">#{value}</span>"</span>])
+       
+          result
+       
+        data = <span class="hljs-keyword">for</span> e <span class="hljs-keyword">in</span> map(data)
+          <span class="hljs-string">"<span class="hljs-subst">#{encodeURIComponent(e[<span class="hljs-number">0</span>])}</span>=<span class="hljs-subst">#{encodeURIComponent(e[<span class="hljs-number">1</span>])}</span>"</span>
+     
+        data.join(<span class="hljs-string">'&amp;'</span>)
+
+      queryString = <span class="hljs-string">"?response_type=token&amp;"</span> + toQueryString(client)
+      redirectLocation = <span class="hljs-string">"https://"</span> + <span class="hljs-property">@getHost</span>() + <span class="hljs-string">":"</span> + <span class="hljs-property">@getPort</span>() + 
+        <span class="hljs-property">@_getResourcePath</span>(<span class="hljs-string">'auth'</span>) + queryString
+     
+      <span class="hljs-property">@_redirect</span> redirectLocation</pre></div>
+        
+      
+        
+        <h2 id="accessing-resource-owner-s-data">Accessing resource owner’s data</h2>
+
+        
+      
+        
+        <p>Once the client has been granted access to the resource 
+owner’s resources, it can access it by means of the 
+<code>getResource()</code> method.
+Each resource is belongs to one or more realms. Assuming 
+your client has requested authorization, which has been 
+granted by the user, to access the real a given resource 
+belongs to, then your application has now access to such resource.</p>
+<p>Every time a client needs to access a resource, it needs 
+to specify a valid <code>access_token</code>.</p>
+<p>As a way of example, here’s the JavaScript code in the 
+browser to access the resource owner’s profile data:</p>
+<pre><code class="lang-javascript">client.getResource(myAcessToken, <span class="hljs-string">"/user/profile"</span>, <span class="hljs-literal">null</span>, 
+   <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(request)</span> </span>{
+      alert(<span class="hljs-string">"User profile data: "</span> + <span class="hljs-built_in">JSON</span>.stringify(request));
+   },
+   <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(request)</span> </span>{
+      alert(<span class="hljs-string">"An error occurred"</span>);
+   }
+);
+</code></pre>
+<blockquote>
+<p><em>Note:</em> <code>myAccessToken</code> is the <code>access_token</code> obtained during the authentication stage. It is out of the scope of this document and depends on your web application how the token is sent to the client code from your</p>
+</blockquote>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-attribute">getResource</span>: <span class="hljs-function"><span class="hljs-params">(accessToken, resourcePath, params, onSuccess, onError)</span> -&gt;</span>
+      
+      <span class="hljs-keyword">throw</span> <span class="hljs-string">'Access token is undefined'</span> <span class="hljs-keyword">unless</span> accessToken?
+      <span class="hljs-keyword">throw</span> <span class="hljs-string">'Resource path is undefined'</span> <span class="hljs-keyword">unless</span> path?
+
+      options = { 
+
+          <span class="hljs-attribute">host</span>: <span class="hljs-property">@getHost</span>(),
+          <span class="hljs-attribute">port</span>: <span class="hljs-property">@getPort</span>() 
+          <span class="hljs-attribute">path</span>: <span class="hljs-property">@getApiVersion</span>() + resourcePath,
+          <span class="hljs-attribute">acess_token</span>: accessToken
+          <span class="hljs-attribute">headers</span>: params
+      }
+
+      http.request(
+        options, 
+<span class="hljs-function">        <span class="hljs-params">(response)</span> =&gt;</span>
+          <span class="hljs-keyword">if</span> onSuccess?
+            response.<span class="hljs-literal">on</span> <span class="hljs-string">'data'</span>, <span class="hljs-function"><span class="hljs-params">(chunk)</span> =&gt;</span>
+              onSuccess(response) <span class="hljs-keyword">if</span> onSuccess?
+
+      ).<span class="hljs-literal">on</span>(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-params">(e)</span> -&gt;</span>
+        onError(e) <span class="hljs-keyword">if</span> onError?
+      ).end()</pre></div>
+        
+      
+        
+        <h2 id="validating-your-acess-token">Validating your acess token</h2>
+
+        
+      
+        
+        <p>Upon sucessfull access granted by the resource owner, an 
+access token will be sent to the client’s web server endpont
+via the <code>redirect_uri</code> callback.</p>
+<p>All tokens <em>MUST</em> be explicitly validated. Failuer to verify
+tokens acquired this way makes your application more vulnerable
+to the <a href="http://en.wikipedia.org/wiki/Confused_deputy_problem">confused deputy problem</a></p>
+<p>In order to validate a token, the server should instantiate
+the library as seen above, and invoke the <code>validateToken()</code> 
+method to perform the validation agains the authentication server
+as follows:</p>
+<pre><code class="lang-javascript">client.validateToken(myAcessToken, 
+   <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(request)</span> </span>{
+      alert(<span class="hljs-string">"Token is valid :)"</span>);
+   },
+   <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(request)</span> </span>{
+      alert(<span class="hljs-string">"Token is NOT valid"</span>);
+   },
+   <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(request)</span> </span>{
+      alert(<span class="hljs-string">"An error occurred"</span>);
+   }
+);
+</code></pre>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-attribute">validateToken</span>: <span class="hljs-function"><span class="hljs-params">(accessToken, onValidToken, onInvalidToken, onError)</span> -&gt;</span>
+        
+        options = { 
+
+            <span class="hljs-attribute">host</span>: <span class="hljs-property">@getHost</span>(),
+            <span class="hljs-attribute">port</span>: <span class="hljs-property">@getPort</span>() 
+            <span class="hljs-attribute">path</span>: <span class="hljs-property">@_getResourcePath</span>(<span class="hljs-string">'validatetoken'</span>),
+            <span class="hljs-attribute">access_token</span>: accessToken
+        }
+
+        http.request(
+          options, 
+<span class="hljs-function">          <span class="hljs-params">(response)</span> =&gt;</span>
+            <span class="hljs-keyword">if</span> onSuccess?
+              response.<span class="hljs-literal">on</span> <span class="hljs-string">'data'</span>, <span class="hljs-function"><span class="hljs-params">(chunk)</span> =&gt;</span>
+                <span class="hljs-keyword">switch</span> response.statusCode
+                  <span class="hljs-keyword">when</span> <span class="hljs-number">200</span> <span class="hljs-keyword">then</span> onValidToken(response) <span class="hljs-keyword">if</span> onValidToken?
+                  <span class="hljs-keyword">when</span> <span class="hljs-number">200</span> <span class="hljs-keyword">then</span> onInvalidToken(response) <span class="hljs-keyword">if</span> onInvalidToken?
+                  <span class="hljs-keyword">else</span> onError(<span class="hljs-keyword">new</span> Error(<span class="hljs-string">"Unexpected response staus code "</span> + response.statusCode)) <span class="hljs-keyword">if</span> onError?
+        ).<span class="hljs-literal">on</span>(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-params">(e)</span> -&gt;</span>
+          onError(e) <span class="hljs-keyword">if</span> onError?
+        ).end()
+
+      
+exports.LogmeInClientAuth = LogmeInClientAuth
+
+<span class="hljs-built_in">module</span>.e<span class="hljs-function"><span class="hljs-title">xports</span> = <span class="hljs-params">(config)</span> -&gt;</span> 
+     <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> LogmeInClientAuth(config)</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>
