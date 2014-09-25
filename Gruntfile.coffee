@@ -7,9 +7,11 @@ module.exports = (grunt) ->
     browserify: 
       dist: 
         files: 
-          'lib/auth.js' : ['src/*.coffee']
+          'lib/main.js' : ['src/*.coffee']
         options: 
           transform: ['coffeeify']
+          browserifyOptions:
+            standalone: 'LogmeInClientAuth'
    
 
   grunt.loadNpmTasks 'grunt-mocha-test'

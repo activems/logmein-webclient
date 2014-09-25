@@ -6,7 +6,7 @@
     "ArturoBlas <arturoblas@gmail.com>"
   ],
   "description": "LogmeIn OAuth2.0 client authorization library",
-  "main": "lib/auth.lib",
+  "main": "lib/main.lib",
   "keywords": [
     "OAuth",
     "OAuth2.0",
