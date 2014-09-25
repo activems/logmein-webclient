@@ -83,7 +83,7 @@ class LogmeInClientAuth
     # authentication server used by the client if no `port` configuration
     # is specified during the library initialization.
     #
-    DEFAULT_PORT : 80
+    DEFAULT_PORT : 443
 
     # `DEFAULT_API` specifies the default API version used 
     # to interface with the server if no `apiVersion` configuration
