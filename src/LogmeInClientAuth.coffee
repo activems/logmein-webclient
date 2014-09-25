@@ -56,19 +56,19 @@
 # +---------+
 # ```
 #
-require ['cs!http'], (http) ->
+http = require('http')
 
-  # The Client class  
-  # ----------------
-  #
-  # The Client class is the entry point to the authentication
-  # library.
-  # It provides with all the necessary functionality to perform 
-  # the authentication, token validation and access to the resource
-  # owner's data.
-  #
-  class LogmeInClientAuth
-   
+# The Client class  
+# ----------------
+#
+# The Client class is the entry point to the authentication
+# library.
+# It provides with all the necessary functionality to perform 
+# the authentication, token validation and access to the resource
+# owner's data.
+#
+class LogmeInClientAuth
+
     # Client settings  
     # ----------------
 
@@ -145,8 +145,8 @@ require ['cs!http'], (http) ->
     #
     getPort: () ->
       return if @config? and @config.port? then @config.port else @DEFAULT_PORT
-    
-    
+
+
     # By calling `getApiVersion()` the caller can retrieve the 
     # configured `apiVersion` used by the library
     #

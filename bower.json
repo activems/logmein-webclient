@@ -1,12 +1,12 @@
 {
   "name": "logmein-client-auth",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "homepage": "https://github.com/activems/logmein-client-auth",
   "authors": [
     "ArturoBlas <arturoblas@gmail.com>"
   ],
   "description": "LogmeIn OAuth2.0 client authorization library",
-  "main": "LogmeInClientAuth.coffee",
+  "main": "lib/auth.lib",
   "keywords": [
     "OAuth",
     "OAuth2.0",

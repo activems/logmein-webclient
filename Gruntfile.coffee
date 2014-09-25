@@ -1,18 +1,18 @@
 module.exports = (grunt) ->
   grunt.initConfig
-    coffee:
-      compile:
-        files:
-          'lib/auth.js': ['src/*.coffee']
     mochaTest:
       options:
         reporter: 'list'
       src: ['test/*.coffee']
+    browserify: 
+      dist: 
+        files: 
+          'lib/auth.js' : ['src/*.coffee']
+        options: 
+          transform: ['coffeeify']
+   
 
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
-  grunt.registerTask 'default', ['coffee']
-
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-mocha-test'
+  grunt.loadNpmTasks 'grunt-browserify'
 
-  grunt.registerTask 'default', ['coffee', 'mochaTest']
+  grunt.registerTask 'default', ['browserify', 'mochaTest']
