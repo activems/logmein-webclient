@@ -1,11 +1,11 @@
 {
-  "name": "logmein-client-auth",
-  "version": "0.1.4",
-  "homepage": "https://github.com/activems/logmein-client-auth",
+  "name": "logmein-webclient",
+  "version": "0.1.0",
+  "homepage": "https://github.com/activems/logmein-webclient",
   "authors": [
     "ArturoBlas <arturoblas@gmail.com>"
   ],
-  "description": "LogmeIn OAuth2.0 client authorization library",
+  "description": "LogmeIn OAuth2.0 JavaScript web client",
   "main": "lib/main.js",
   "keywords": [
     "OAuth",

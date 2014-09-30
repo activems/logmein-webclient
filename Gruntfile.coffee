@@ -7,7 +7,7 @@ module.exports = (grunt) ->
         options:  
           transform: ['coffeeify']
           browserifyOptions:
-            standalone: 'LogmeInClientAuth'
+            standalone: 'LogmeinWebClient'
     meta:
       src: 'lib/main.js'
       specs: 'build/tests.js'

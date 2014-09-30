@@ -1,55 +1,28 @@
-Using LogmeIn OAuth2.0 client authorization library
+Using LogmeIn OAuth2.0 JavaScript web client
 =======
 
 LogmeIn OAuth 2.0 endpoint supports JavaScript-centric application. 
-These applications may access the resource owner's data while the user is present by obtaining explicit authorization from it.
+These applications may access the resource owner's data while the user is present by obtaining explicit authorization from it by using the *OAuth2 implicit grant model* from [RFC 6749](http://tools.ietf.org/html/rfc6749#section-4.2).
 
 One important characteristic of these applications is that the cannot keep a secret, which means that the client secret cannot be used to stablish the authentication.
 
-This library provides acess to the authentication server so that clients like these can make use of the authentication system. It  does so by implementing the OAuth 2.0 *[implicit grant](http://tools.ietf.org/html/rfc6749#section-4.2)* authentication model.
+In order to cirnunvent this issue, the implicit grant model involves that the client should provide a callback endpoint on their web infrastructure.
 
-> *Note:* The implicit grant model involves that the client should provide a callback endpoint on their web infrastructure as explained below.
-
-Here's an illustration of how the whole authorization process
-works using the implicit grant model:
-
-```html
-+----------+
-| Resource |
-|  Owner   |
-|          | 
-+----------+
-     ^
-     |
-    (B)
-+----|-----+          Client Identifier     +---------------+
-|         -+----(A)-- & Redirection URI --->|               |
-|  User-   |                                | Authorization |
-|  Agent  -|----(B)-- User authenticates -->|     Server    |
-|          |                                |               |
-|          |<---(C)--- Redirection URI ----<|               |
-|          |          with Access Token     +---------------+
-|          |            in Fragment
-|          |                                +---------------+
-|          |----(D)--- Redirection URI ---->|   Web-Hosted  |
-|          |          without Fragment      |     Client    |
-|          |                                |    Resource   |
-|     (F)  |<---(E)------- Script ---------<|               |
-|          |                                +---------------+
-+-|--------+
-  |    |
- (A)  (G) Access Token
-  |    |
-  ^    v
-+---------+
-|         |
-|  Client |
-|         |
-+---------+
-```
+This library provides support for your client-side code to perform the authentication against the server as well as provides access to all the functionality also provided by [logmein-webclient-be](https://github.com/activems/logmein-webclient-be).
 
 Initializing the client library
 -----------
+
+You may install the library via `bower`:
+
+```bash
+$ bower install logmein-webclient
+```
+Make sure you import the javascript into your `html` file:
+
+```html
+<script src="libs/logmein-webclient/lib/main.js"></script>
+```
 
 To initialize the library you just need to call the constructor, method, which takes as input a configuration object that can contain zero or more of the following fields:
 
@@ -62,12 +35,12 @@ To initialize the library you just need to call the constructor, method, which t
 Example of initialization from a JavaScript client:
 
 ```javascript
-var client = LogmeInClientAuth();
+var client = LogmeWebClient();
 ```
 For clients with nosting their own authorization infrastructure, a custom settings may be also provided:
 
 ```javascript
-var client = LogmeInClientAuth({ host: "example.com", port: 8000});
+var client = LogmeWebClient({ host: "example.com", port: 8000});
 ```
 A new LogmeIn client instance is returned that can be used to
 perform the authentication and access protected resources.
@@ -132,45 +105,3 @@ A sample implementation of the callback and the functionality for retrieving the
 
 One important thing to take into account is that the client should always validate the `access_token` once retrieved in their server. Failure to do so
 makes your application more vulnerable to the [confused deputy problem](http://en.wikipedia.org/wiki/Confused_deputy_problem).
-
-Accessing resource owner's data
-------------
-
-Once the client has been granted access to the resource owner's resources, it can access it by means of the `getResource()` method.
-
-Each resource is belongs to one or more realms. Assuming your client has requested authorization, which has been granted by the user, to access the real a given resource belongs to, then your application has now access to such resource.
-
-Every time a client needs to access a resource, it needs to specify a valid `access_token`.
-
-As a way of example, here's the JavaScript code in the browser to access the resource owner's profile data:
-
-```javascript
-client.getResource(myAcessToken, "/user/profile", null, 
-    function(request) {
-        alert("User profile data: " + JSON.stringify(request));
-    },
-    function(request) {
-        alert("An error occurred");
-    }
-);
-```
-> *Note:* `myAccessToken` is the `access_token` obtained during the authentication stage. It is out of the scope of this document and depends on your web application how the token is sent to the client code from your server.
-
-Optional: Validating an access token
--------------------
-
-The token validation will usually take place in your web server. However, this can also be done from your client code by calling the `validateToken()` method as follows:
-
-```javascript
-client.validateToken(myAcessToken, 
-    function(request) {
-       alert("Token is valid :)");
-    },
-    function(request) {
-       alert("Token is NOT valid");
-    },
-    function(request) {
-        alert("An error occurred");
-    }
-);
-```

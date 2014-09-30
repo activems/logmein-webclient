@@ -67,7 +67,7 @@ http = require('http')
 # the authentication, token validation and access to the resource
 # owner's data.
 #
-class LogmeInClientAuth
+class LogmeinWebClient 
 
     # Client settings  
     # ----------------
@@ -319,115 +319,8 @@ class LogmeInClientAuth
      
       @_redirect redirectLocation
 
-    # Accessing resource owner's data
-    # -------------------------------------------
-    #
-    # Once the client has been granted access to the resource 
-    # owner's resources, it can access it by means of the 
-    # `getResource()` method.
-    # Each resource is belongs to one or more realms. Assuming 
-    # your client has requested authorization, which has been 
-    # granted by the user, to access the real a given resource 
-    # belongs to, then your application has now access to such resource.
-    #
-    # Every time a client needs to access a resource, it needs 
-    # to specify a valid `access_token`.
-    #
-    # As a way of example, here's the JavaScript code in the 
-    # browser to access the resource owner's profile data:
-    #
-    # ```javascript
-    # client.getResource(myAcessToken, "/user/profile", null, 
-    #    function(request) {
-    #       alert("User profile data: " + JSON.stringify(request));
-    #    },
-    #    function(request) {
-    #       alert("An error occurred");
-    #    }
-    #);
-    # ```
-    # > *Note:* `myAccessToken` is the `access_token` obtained during the authentication stage. It is out of the scope of this document and depends on your web application how the token is sent to the client code from your
-    #
-    getResource: (accessToken, resourcePath, params, onSuccess, onError) ->
       
-      throw 'Access token is undefined' unless accessToken?
-      throw 'Resource path is undefined' unless path?
-
-      options = { 
-
-          host: @getHost(),
-          port: @getPort() 
-          path: @getApiVersion() + resourcePath,
-          acess_token: accessToken
-          headers: params
-      }
-
-      http.request(
-        options, 
-        (response) =>
-          if onSuccess?
-            response.on 'data', (chunk) =>
-              onSuccess(response) if onSuccess?
-
-      ).on('error', (e) ->
-        onError(e) if onError?
-      ).end()
-
-    # Validating your acess token
-    # ----------------------------------------------------
-    #
-    # Upon sucessfull access granted by the resource owner, an 
-    # access token will be sent to the client's web server endpont
-    # via the `redirect_uri` callback.
-    #
-    # All tokens *MUST* be explicitly validated. Failuer to verify
-    # tokens acquired this way makes your application more vulnerable
-    # to the [confused deputy problem](http://en.wikipedia.org/wiki/Confused_deputy_problem)
-    #
-    # In order to validate a token, the server should instantiate
-    # the library as seen above, and invoke the `validateToken()` 
-    # method to perform the validation agains the authentication server
-    # as follows:
-    #
-    # ```javascript
-    # client.validateToken(myAcessToken, 
-    #    function(request) {
-    #       alert("Token is valid :)");
-    #    },
-    #    function(request) {
-    #       alert("Token is NOT valid");
-    #    },
-    #    function(request) {
-    #       alert("An error occurred");
-    #    }
-    #);
-    # ```
-    #
-    validateToken: (accessToken, onValidToken, onInvalidToken, onError) ->
-        
-        options = { 
-
-            host: @getHost(),
-            port: @getPort() 
-            path: @_getResourcePath('validatetoken'),
-            access_token: accessToken
-        }
-
-        http.request(
-          options, 
-          (response) =>
-            if onSuccess?
-              response.on 'data', (chunk) =>
-                switch response.statusCode
-                  when 200 then onValidToken(response) if onValidToken?
-                  when 200 then onInvalidToken(response) if onInvalidToken?
-                  else onError(new Error("Unexpected response staus code " + response.statusCode)) if onError?
-        ).on('error', (e) ->
-          onError(e) if onError?
-        ).end()
-
-      
-exports.LogmeInClientAuth = LogmeInClientAuth
+exports.LogmeinWebClient = LogmeinWebClient
 
 module.exports = (config) -> 
-     return new LogmeInClientAuth(config) 
+     return new LogmeinWebClient(config) 
